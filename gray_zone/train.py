@@ -26,12 +26,16 @@ def train(model: [torch.Tensor],
           scheduler: any,
           n_class: int,
           model_type: str = 'classification',
-          val_metric: str = None):
+          val_metric: str = None,
+          make_plots: bool = False):
     """ Training loop. """
     best_metric = -np.inf
     best_metric_epoch = -1
     epoch_loss_values = []
     metric_values = []
+
+    if make_plots:
+        epoch_loss_val_values = []
 
     for epoch in range(n_epochs):
         print("-" * 10)
@@ -82,6 +86,9 @@ def train(model: [torch.Tensor],
             avg_val_loss = val_loss / step
             scheduler.step(val_loss / step)
 
+            if make_plots:
+                epoch_loss_val_values.append(avg_val_loss)
+
             y_pred = y_pred.detach().cpu().numpy()
             y = y.detach().cpu().numpy()
 
@@ -115,4 +122,12 @@ def train(model: [torch.Tensor],
             torch.save(model.state_dict(), os.path.join(
                 output_path, "checkpoints", f"checkpoint{epoch}.pth"))
 
-
+    if make_plots:
+        train_loss_values = epoch_loss_values
+        val_loss_values = [item.detach().cpu().numpy() for item in epoch_loss_val_values]
+        loss_dict = {}
+        loss_dict['Train'] = train_loss_values
+        loss_dict['Val'] = val_loss_values
+        loss_dict['Metric'] = metric_values
+        df_loss_values = pd.DataFrame(loss_dict)
+        df_loss_values.to_csv(os.path.join(output_path, 'loss_metric_values.csv'))
