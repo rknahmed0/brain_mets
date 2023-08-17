@@ -76,6 +76,11 @@ def get_model_type_params(model_type: str,
         if n_class > 2:
             act = torch.nn.Softmax(dim=1)
             out_channels = n_class
+        ##############################################################################################        
+        # elif n_class == 2: # Uncomment to allow Weighted Kappa Loss for binary models
+        #     act = torch.nn.Softmax(dim=1)
+        #     out_channels = n_class
+        ##############################################################################################  
         # Binary model
         else:
             act = Activations(sigmoid=True)
